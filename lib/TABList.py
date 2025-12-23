@@ -53,7 +53,9 @@ class TABList(QWidget):
         self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
 
         for i in range(0, self.itemsTable.columnCount(), 1):
-            entryItem = QTableWidgetItem(list(item.values())[i])
+            # Handle None values from dictionary
+            value = list(item.values())[i]
+            entryItem = QTableWidgetItem(value if value is not None else "")
             self.itemsTable.setItem(self.itemsTable.rowCount() - 1, i, entryItem)
 
         self._checkForDuplicate(self.itemsTable.rowCount() - 1)
@@ -67,13 +69,23 @@ class TABList(QWidget):
         try:
             with open(csvFilename[0], "r", newline='') as csvfile:
                 csvreader = csv.DictReader(csvfile)
+                
+                # Check if fieldnames exist (file might be empty)
+                if csvreader.fieldnames is None:
+                    self.parent.addLogEntry(f"Import failed: {csvFilename[0]} is empty or has no header")
+                    return
+                
                 for column in Constants.LIST_DATA_COLUMNS_REQUIRED:
                     if column not in csvreader.fieldnames:
                         self.parent.addLogEntry(f"Import failed: {csvFilename[0]} does not contain {column}")
                         return
 
                 for row in csvreader:
-                    self.addListItem(row)
+                    # Build complete row with all columns, using empty string for missing ones
+                    complete_row = {}
+                    for column in Constants.LIST_DATA_COLUMNS:
+                        complete_row[column] = row.get(column, "")
+                    self.addListItem(complete_row)
 
                 self.parent.addLogEntry(f"Import successful: {csvFilename[0]}")
 
@@ -94,7 +106,8 @@ class TABList(QWidget):
                 for row in range(0, self.itemsTable.rowCount(), 1):
                     dataEntry = {}
                     for i in range(0, self.itemsTable.columnCount(), 1):
-                        dataEntry[Constants.LIST_DATA_COLUMNS[i]] = self.itemsTable.item(row, i).text()
+                        cell = self.itemsTable.item(row, i)
+                        dataEntry[Constants.LIST_DATA_COLUMNS[i]] = cell.text() if cell is not None else ""
 
                     data.append(dataEntry)
 
