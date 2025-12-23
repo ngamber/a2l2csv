@@ -1,4 +1,4 @@
-import decimal
+import lib.Helpers as Helpers
 import lib.Constants as Constants
 from PyQt6.QtCore import QThread, pyqtSignal
 from pya2l import model
@@ -109,8 +109,8 @@ class SearchThread(QThread):
                     "Address"       : hex(item.ecu_address.address),
                     "Length"        : Constants.DATA_LENGTH[item.datatype],
                     "Signed"        : Constants.DATA_SIGNED[item.datatype],
-                    "Min"           : self.float_to_str(item.lowerLimit),
-                    "Max"           : self.float_to_str(item.upperLimit),
+                    "Min"           : Helpers.float_to_str(item.lowerLimit),
+                    "Max"           : Helpers.float_to_str(item.upperLimit),
                     "Description"   : item.longIdentifier
                 })
 
@@ -124,29 +124,17 @@ class SearchThread(QThread):
         self.finished.emit()
 
 
-    def float_to_str(self, f):
-        # create a new context for this task
-        ctx = decimal.Context()
-        ctx.prec = 5
-
-        """
-        Convert the given float to a string,
-        without resorting to scientific notation
-        """
-        d1 = ctx.create_decimal(repr(f))
-        return format(d1, 'f')
-
     def getEquation(self, item, compuMethod):
         if compuMethod.coeffs is None:
             return "x"
 
         a, b, c, d, e, f = (
-            self.float_to_str(compuMethod.coeffs.a),
-            self.float_to_str(compuMethod.coeffs.b),
-            self.float_to_str(compuMethod.coeffs.c),
-            self.float_to_str(compuMethod.coeffs.d),
-            self.float_to_str(compuMethod.coeffs.e),
-            self.float_to_str(compuMethod.coeffs.f),
+            Helpers.float_to_str(compuMethod.coeffs.a),
+            Helpers.float_to_str(compuMethod.coeffs.b),
+            Helpers.float_to_str(compuMethod.coeffs.c),
+            Helpers.float_to_str(compuMethod.coeffs.d),
+            Helpers.float_to_str(compuMethod.coeffs.e),
+            Helpers.float_to_str(compuMethod.coeffs.f),
         )
 
         sign = '-'

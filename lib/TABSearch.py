@@ -1,3 +1,4 @@
+import lib.Helpers as Helpers
 import lib.Constants as Constants
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup
 from lib.SearchThread import SearchThread
@@ -136,8 +137,8 @@ class TABSearch(QWidget):
                 "Signed"        : self.itemsTable.selectedItems()[i + 5].text(),
                 "ProgMin"       : self.itemsTable.selectedItems()[i + 6].text(),
                 "ProgMax"       : self.itemsTable.selectedItems()[i + 7].text(),
-                "WarnMin"       : str(float(self.itemsTable.selectedItems()[i + 6].text()) - 1),
-                "WarnMax"       : str(float(self.itemsTable.selectedItems()[i + 7].text()) + 1),
+                "WarnMin"       : Helpers.float_to_str(float(self.itemsTable.selectedItems()[i + 6].text()) - 1),
+                "WarnMax"       : Helpers.float_to_str(float(self.itemsTable.selectedItems()[i + 7].text()) + 1),
                 "Smoothing"     : "0",
                 "Enabled"       : "TRUE",
                 "Tabs"          : "",
