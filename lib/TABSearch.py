@@ -85,7 +85,8 @@ class TABSearch(QWidget):
                 "Smoothing"     : "0",
                 "Enabled"       : "TRUE",
                 "Tabs"          : "",
-                "Assign To"     : ""
+                "Assign To"     : "",
+                "Description"   : self.itemsTable.selectedItems()[i + 8].text()
             }
             self.parent.addListItem(item)
 

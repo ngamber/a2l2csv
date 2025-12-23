@@ -6,8 +6,9 @@ APPLICATION_VERSION_MINOR       = 1
 APPLICATION_VERSION_STRING      = f"A2L2CSV v{APPLICATION_VERSION_MAJOR}.{APPLICATION_VERSION_MINOR}"
 SEARCH_DATA_COLUMNS             = ["Name", "Unit", "Equation", "Address", "Length", "Signed", "Min", "Max", "Description"]
 SEARCH_COLUMN_SIZES             = [175, 50, 200, 85, 45, 50, 50, 50, 750]
-LIST_DATA_COLUMNS               = ["Name", "Unit", "Equation", "Format", "Address", "Length", "Signed", "ProgMin", "ProgMax", "WarnMin", "WarnMax", "Smoothing", "Enabled", "Tabs", "Assign To"]
-LIST_COLUMN_SIZES               = [175, 50, 200, 75, 85, 50, 50, 65, 65, 65, 65, 65, 50, 150, 150]
+LIST_DATA_COLUMNS_REQUIRED      = ["Name", "Unit", "Equation", "Format", "Address", "Length", "Signed", "ProgMin", "ProgMax", "WarnMin", "WarnMax", "Smoothing", "Enabled", "Tabs", "Assign To"]
+LIST_DATA_COLUMNS               = LIST_DATA_COLUMNS_REQUIRED + ["Description"]
+LIST_COLUMN_SIZES               = [175, 50, 200, 75, 85, 50, 50, 65, 65, 65, 65, 65, 50, 150, 150, 750]
 
 DATA_LENGTH = {
     "UWORD": "2",

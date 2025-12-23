@@ -1,3 +1,4 @@
+import csv
 import lib.Constants as Constants
 from PyQt6.QtCore import Qt, QThread
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QCheckBox, QRadioButton, QFileDialog, QLineEdit, QLabel, QFrame, QTableWidget, QTableWidgetItem, QAbstractItemView
@@ -46,7 +47,6 @@ class TABList(QWidget):
 
 
     def addListItem(self, item):
-        #self.parent.addLogEntry(f"Item: {item}")
         self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
 
         for index, (key, value) in enumerate(item.items()):
@@ -55,17 +55,58 @@ class TABList(QWidget):
 
 
     def ImportButtonClick(self):
-        a2lFileName = QFileDialog.getOpenFileName(self, "Open A2L", "", "A2L (*.a2l;*.a2ldb)",)
-        self.parent.addLogEntry("Import")
+        csvFilename = QFileDialog.getOpenFileName(self, "Open CSV", "", "CSV (*.csv)",)
+        if len(csvFilename[0]) == 0:
+            return
+
+        try:
+            with open(csvFilename[0], "r", newline='') as csvfile:
+                csvreader = csv.DictReader(csvfile)
+                for column in Constants.LIST_DATA_COLUMNS_REQUIRED:
+                    if column not in csvreader.fieldnames:
+                        self.parent.addLogEntry(f"Import failed: {csvFilename[0]} does not contain {column}")
+                        return
+
+                for row in csvreader:
+                    self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
+
+                    for index, (key, value) in enumerate(row.items()):
+                        entryItem = QTableWidgetItem(value)
+                        self.itemsTable.setItem(self.itemsTable.rowCount() - 1, index, entryItem)
+
+
+                self.parent.addLogEntry(f"Import successful: {csvFilename[0]}")
+
+        except:
+            self.parent.addLogEntry(f"Import failed: {csvFilename[0]}")
 
 
     def ExportButtonClick(self):
-        a2lFileName = QFileDialog.getSaveFileName(self, "Save CSV", "", "CSV (*.csv)",)
-        self.parent.addLogEntry("Export")
+        csvFilename = QFileDialog.getSaveFileName(self, "Save CSV", "", "CSV (*.csv)",)
+        if len(csvFilename[0]) == 0:
+            return
+
+        try:
+            with open(csvFilename[0], "w", newline='') as csvfile:
+                csvwriter = csv.DictWriter(csvfile, fieldnames=Constants.LIST_DATA_COLUMNS)
+
+                data = []
+                for row in range(0, self.itemsTable.rowCount(), 1):
+                    dataEntry = {}
+                    for i in range(0, self.itemsTable.columnCount(), 1):
+                        dataEntry[Constants.LIST_DATA_COLUMNS[i]] = self.itemsTable.item(row, i).text()
+
+                    data.append(dataEntry)
+
+                csvwriter.writeheader()
+                csvwriter.writerows(data)
+                self.parent.addLogEntry(f"Export successful: {csvFilename[0]}")
+
+        except:
+            self.parent.addLogEntry(f"Export failed: {csvFilename[0]}")
 
 
     def RemoveButtonClick(self):
         while len(self.itemsTable.selectedItems()):
-            #self.parent.addLogEntry(f"Remove row {self.itemsTable.selectedItems()[0].row()}")
             self.itemsTable.removeRow(self.itemsTable.selectedItems()[0].row())
             
