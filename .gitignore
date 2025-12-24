@@ -9,6 +9,10 @@ A2L.tmp
 AML.tmp
 IFDATA.tmp
 
+# A2L files
+*.a2l
+*.a2ldb
+
 # Virtual environment
 .venv/
 venv/
@@ -16,6 +20,7 @@ ENV/
 env/
 
 # IDE
+.vs/
 .vscode/
 .idea/
 *.swp

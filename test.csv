@@ -1,0 +1,9 @@
+Name,Unit,Equation,Format,Address,Length,Signed,ProgMin,ProgMax,WarnMin,WarnMax,Smoothing,Enabled,Tabs,Assign To,Description
+ACC_aDes_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad16,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,desired acceleration of ACC sensor
+ACC_aGrdNeg_VW,m/s^3,((1.0 * [x]) - 0.0) / 20.0,%01.0f,0xd001ad18,2,FALSE,0.0,3276.8,-1.0,3277.8,0,TRUE,,,negative acceleration gradient from ACC sensor
+ACC_aGrdPos_VW,m/s^3,((1.0 * [x]) - 0.0) / 20.0,%01.0f,0xd001ad1a,2,FALSE,0.0,3276.8,-1.0,3277.8,0,TRUE,,,positive acceleration gradient from ACC sensor
+ACC_aTolcAbv_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad1c,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,acceleration tolerance above setpoint of ACC sensor
+ACC_aTolcBlw_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad1e,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,acceleration tolerance below setpoint of ACC sensor
+ABS_bIntv_VW,-,x,%01.0f,0xd001ad14,1,FALSE,0.0,1.0,-1.0,2.0,0,TRUE,,,ABS intervention active
+ACC_aDes_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad16,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,desired acceleration of ACC sensor
+ACC_aGrdNeg_VW,m/s^3,((1.0 * [x]) - 0.0) / 20.0,%01.0f,0xd001ad18,2,FALSE,0.0,3276.8,-1.0,3277.8,0,TRUE,,,negative acceleration gradient from ACC sensor

@@ -46,11 +46,17 @@ class TABList(QWidget):
 
 
     def addListItem(self, item):
+        if len(item) != self.itemsTable.columnCount():
+            self.parent.addLogEntry(f"Failed to add item to list: {item}")
+            return
+
         self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
 
-        for index, (key, value) in enumerate(item.items()):
-            entryItem = QTableWidgetItem(value)
-            self.itemsTable.setItem(self.itemsTable.rowCount() - 1, index, entryItem)
+        for i in range(0, self.itemsTable.columnCount(), 1):
+            entryItem = QTableWidgetItem(list(item.values())[i])
+            self.itemsTable.setItem(self.itemsTable.rowCount() - 1, i, entryItem)
+
+        self._checkForDuplicate(self.itemsTable.rowCount() - 1)
 
 
     def ImportButtonClick(self):
@@ -67,12 +73,7 @@ class TABList(QWidget):
                         return
 
                 for row in csvreader:
-                    self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
-
-                    for index, (key, value) in enumerate(row.items()):
-                        entryItem = QTableWidgetItem(value)
-                        self.itemsTable.setItem(self.itemsTable.rowCount() - 1, index, entryItem)
-
+                    self.addListItem(row)
 
                 self.parent.addLogEntry(f"Import successful: {csvFilename[0]}")
 
@@ -108,4 +109,32 @@ class TABList(QWidget):
     def RemoveButtonClick(self):
         while len(self.itemsTable.selectedItems()):
             self.itemsTable.removeRow(self.itemsTable.selectedItems()[0].row())
-            
+
+        for row in range(0, self.itemsTable.rowCount(), 1):
+            self._checkForDuplicate(row)
+
+
+    def _checkForDuplicate(self, row):
+        #get address and see if its a virtual address, if so move on
+        address = self.itemsTable.item(row, Constants.LIST_DATA_COLUMNS.index("Address")).text()
+        if address in Constants.VIRTUAL_ADDRESSES:
+            self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
+            return
+
+        #now compare address to all rows except its own
+        color = Constants.NORMAL_BACKGROUND_COLOR
+        for compareRow in range(0, self.itemsTable.rowCount(), 1):
+            if compareRow == row:
+                continue
+
+            compareAddress = self.itemsTable.item(compareRow, Constants.LIST_DATA_COLUMNS.index("Address")).text()
+            if compareAddress == address:
+                color = Constants.DUPLICATE_BACKGROUND_COLOR
+                self._setRowColor(compareRow, Constants.DUPLICATE_BACKGROUND_COLOR)
+
+        self._setRowColor(row, color)
+
+
+    def _setRowColor(self, row, color):
+        for i in range(0, self.itemsTable.columnCount(), 1):
+            self.itemsTable.item(row, i).setBackground(color)

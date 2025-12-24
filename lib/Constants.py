@@ -1,5 +1,7 @@
-#list of constants for application
+from PyQt6.QtGui import QColor
 
+
+#list of constants for application
 
 APPLICATION_VERSION_MAJOR       = 0
 APPLICATION_VERSION_MINOR       = 1
@@ -9,6 +11,9 @@ SEARCH_COLUMN_SIZES             = [175, 50, 200, 85, 45, 50, 50, 50, 750]
 LIST_DATA_COLUMNS_REQUIRED      = ["Name", "Unit", "Equation", "Format", "Address", "Length", "Signed", "ProgMin", "ProgMax", "WarnMin", "WarnMax", "Smoothing", "Enabled", "Tabs", "Assign To"]
 LIST_DATA_COLUMNS               = LIST_DATA_COLUMNS_REQUIRED + ["Description"]
 LIST_COLUMN_SIZES               = [175, 50, 200, 75, 85, 50, 50, 65, 65, 65, 65, 65, 50, 150, 150, 750]
+VIRTUAL_ADDRESSES               = ["0xFF", "0xFFFF", "0xFFFFFFFF"]
+NORMAL_BACKGROUND_COLOR         = QColor(48, 48, 48)
+DUPLICATE_BACKGROUND_COLOR      = QColor(120, 24, 24)
 
 DATA_LENGTH = {
     "UWORD": "2",
