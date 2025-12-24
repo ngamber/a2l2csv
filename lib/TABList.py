@@ -1,6 +1,6 @@
 import csv
 import lib.Constants as Constants
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QTableWidget, QTableWidgetItem, QAbstractItemView
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QTableWidget, QTableWidgetItem, QAbstractItemView, QCheckBox
 
 
 class TABList(QWidget):
@@ -25,6 +25,11 @@ class TABList(QWidget):
         self.buttonsLayoutBox.addWidget(self.exportPushButton)
 
         self.mainLayoutBox.addLayout(self.buttonsLayoutBox)
+
+        #Overwrite checkbox
+        self.overwriteCheckBox = QCheckBox("Overwrite existing PIDs")
+        self.overwriteCheckBox.setChecked(False)
+        self.mainLayoutBox.addWidget(self.overwriteCheckBox)
 
         #Items table
         self.itemsTable = QTableWidget()
@@ -83,6 +88,7 @@ class TABList(QWidget):
 
 
     def ImportButtonClick(self):
+        overwrite = self.overwriteCheckBox.isChecked()
         csvFilename = QFileDialog.getOpenFileName(self, "Open CSV", "", "CSV (*.csv)",)
         if len(csvFilename[0]) == 0:
             return
@@ -97,7 +103,7 @@ class TABList(QWidget):
                         return
 
                 for row in csvreader:
-                    self.addListItem(row)
+                    self.addListItem(row, overwrite)
 
                 self.parent.addLogEntry(f"Import successful: {csvFilename[0]}")
 

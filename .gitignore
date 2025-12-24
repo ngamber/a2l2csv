@@ -13,6 +13,9 @@ IFDATA.tmp
 *.a2l
 *.a2ldb
 
+# CSV files
+*.csv
+
 # Virtual environment
 .venv/
 venv/

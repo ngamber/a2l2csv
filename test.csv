@@ -1,9 +1,13 @@
 Name,Unit,Equation,Format,Address,Length,Signed,ProgMin,ProgMax,WarnMin,WarnMax,Smoothing,Enabled,Tabs,Assign To,Description
-ACC_aDes_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad16,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,desired acceleration of ACC sensor
-ACC_aGrdNeg_VW,m/s^3,((1.0 * [x]) - 0.0) / 20.0,%01.0f,0xd001ad18,2,FALSE,0.0,3276.8,-1.0,3277.8,0,TRUE,,,negative acceleration gradient from ACC sensor
-ACC_aGrdPos_VW,m/s^3,((1.0 * [x]) - 0.0) / 20.0,%01.0f,0xd001ad1a,2,FALSE,0.0,3276.8,-1.0,3277.8,0,TRUE,,,positive acceleration gradient from ACC sensor
-ACC_aTolcAbv_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad1c,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,acceleration tolerance above setpoint of ACC sensor
-ACC_aTolcBlw_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad1e,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,acceleration tolerance below setpoint of ACC sensor
-ABS_bIntv_VW,-,x,%01.0f,0xd001ad14,1,FALSE,0.0,1.0,-1.0,2.0,0,TRUE,,,ABS intervention active
-ACC_aDes_VW,m/s^2,((1.0 * [x]) - 0.0) / 1000.0,%01.0f,0xd001ad16,2,TRUE,-32.768,32.767,-33.768,33.767,0,TRUE,,,desired acceleration of ACC sensor
-ACC_aGrdNeg_VW,m/s^3,((1.0 * [x]) - 0.0) / 20.0,%01.0f,0xd001ad18,2,FALSE,0.0,3276.8,-1.0,3277.8,0,TRUE,,,negative acceleration gradient from ACC sensor
+abc_PRS_UP_THR_ORNG_MAX,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0018fe6,1,TRUE,-128.0,127.0,-129.0,128.0,0,TRUE,,,Debounce counter of diagnostic for ABC
+abc_PRS_UP_THR_ORNG_MIN,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0018fe7,1,TRUE,-128.0,127.0,-129.0,128.0,0,TRUE,,,Debounce counter of diagnostic for ABC
+amp_prs_up_thr_dif_diag,hPa,((1.0 * [x]) - 0.0) / 12.060,%01.0f,0xd0013c8c,2,FALSE,0.0,5434.0,-1.0,5435.0,0,TRUE,,,Difference ambient vs. pressure up throttle (AMP_MES ~ PRS_UP_THR_MES) - absolut value.
+ctr_amp_prs_up_thr_plaus,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0017774,2,FALSE,0.0,65535,-1.0,65536,0,TRUE,,,Delay counter before setting diagnosis flag for AMP-PRS_UP_THR plausibility
+ctr_amp_prs_up_thr_plaus_is,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0017776,2,FALSE,0.0,65535,-1.0,65536,0,TRUE,,,Delay counter before setting diagnosis flag for AMP-PRS_UP_THR plausibility in idle
+ctr_amp_prs_up_thr_plaus_pu,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0017778,2,FALSE,0.0,65535,-1.0,65536,0,TRUE,,,Delay counter before setting diagnosis flag for AMP-PRS_UP_THR plausibility in PU/PUC
+ctr_cdn_rbm_PRS_UP_THR_PLAUS,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0016852,2,FALSE,0.0,65535,-1.0,65536,0,TRUE,,,Monitor individual denominator: number of DC with convenient vehicle operation for monitor since first power-up
+ctr_comp_rbm_PRS_UP_THR_PLAUS,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0016986,2,FALSE,0.0,65535,-1.0,65536,0,TRUE,,,Monitor individual  numerator: number of DC with monitor done since first power-up
+err_dtc_stat_byte_PRS_UP_THR_ORNG_MIN,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0018bb0,1,FALSE,0.0,255.0,-1.0,256.0,0,TRUE,,,Status byte of failure IDX_ERR
+err_dtc_stat_byte_PRS_UP_THR_PLAUS,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0018d7a,1,FALSE,0.0,255.0,-1.0,256.0,0,TRUE,,,Status byte of failure IDX_ERR
+ctr_prs_up_thr_im_plaus,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0017786,2,FALSE,0.0,65535,-1.0,65536,0,TRUE,,,Delay counter before setting diagnosis flag for PRS_UP_THR - PRS_IM plausibility
+err_dtc_stat_byte_PRS_UP_THR_ORNG_MAX,-,((1.0 * [x]) - 0.0) / 1.0,%01.0f,0xd0018baf,1,FALSE,0.0,255.0,-1.0,256.0,0,TRUE,,,Status byte of failure IDX_ERR
