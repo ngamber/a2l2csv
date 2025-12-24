@@ -1,6 +1,6 @@
 import lib.Helpers as Helpers
 import lib.Constants as Constants
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup, QCheckBox
 from lib.SearchThread import SearchThread
 from lib.SearchThread import SearchPosition
 from lib.SearchThread import SearchType
@@ -82,6 +82,11 @@ class TABSearch(QWidget):
 
         self.mainLayoutBox.addWidget(self.itemsTable)
 
+        #Overwrite checkbox
+        self.overwriteCheckBox = QCheckBox("Overwrite existing PIDs")
+        self.overwriteCheckBox.setChecked(False)
+        self.mainLayoutBox.addWidget(self.overwriteCheckBox)
+
         #Add button
         self.addPushButton = QPushButton("Add to list")
         self.addPushButton.setFixedHeight(50)
@@ -127,6 +132,7 @@ class TABSearch(QWidget):
 
 
     def AddButtonClick(self):
+        overwrite = self.overwriteCheckBox.isChecked()
         selected_rows = set()
         for item in self.itemsTable.selectedItems():
             selected_rows.add(item.row())
@@ -166,7 +172,7 @@ class TABSearch(QWidget):
                 "Assign To"     : "",
                 "Description"   : desc_item.text() if desc_item else ""
             }
-            self.parent.addListItem(item)
+            self.parent.addListItem(item, overwrite)
 
         self.parent.addLogEntry(f"Added {len(selected_rows)} items to list")
 
