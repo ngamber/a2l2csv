@@ -205,10 +205,12 @@ class TABSearch(QWidget):
         new_row_count = current_rows + len(items)
         self.itemsTable.setRowCount(new_row_count)
         
-        # Add all items
+        # Add all items using the expected column order from Constants
+        # This ensures columns match even if dict key order changes during signal emission
         for batch_index, item in enumerate(items):
             row = current_rows + batch_index
-            for col_index, (key, value) in enumerate(item.items()):
+            for col_index, column_name in enumerate(Constants.SEARCH_DATA_COLUMNS):
+                value = item.get(column_name, "")
                 entryItem = QTableWidgetItem(value)
                 self.itemsTable.setItem(row, col_index, entryItem)
         
