@@ -49,8 +49,8 @@ class MainWindow(QMainWindow):
         self.listViewLog.scrollToBottom()
 
 
-    def addListItem(self, item):
-        self.listTab.addListItem(item)
+    def addListItem(self, item, overwrite=False):
+        self.listTab.addListItem(item, overwrite)
 
 
 # Main

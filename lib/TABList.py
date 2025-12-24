@@ -45,18 +45,41 @@ class TABList(QWidget):
         self.setLayout(self.mainLayoutBox)
 
 
-    def addListItem(self, item):
+    def addListItem(self, item, overwrite=False):
         if len(item) != self.itemsTable.columnCount():
             self.parent.addLogEntry(f"Failed to add item to list: {item}")
             return
 
-        self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
-
-        for i in range(0, self.itemsTable.columnCount(), 1):
-            entryItem = QTableWidgetItem(list(item.values())[i])
-            self.itemsTable.setItem(self.itemsTable.rowCount() - 1, i, entryItem)
-
-        self._checkForDuplicate(self.itemsTable.rowCount() - 1)
+        # Check if item with same Address already exists
+        existing_rows = []
+        if overwrite:
+            item_address = item.get("Address", "")
+            address_col = Constants.LIST_DATA_COLUMNS.index("Address")
+            for row in range(self.itemsTable.rowCount()):
+                cell = self.itemsTable.item(row, address_col)
+                if cell is not None and cell.text() == item_address:
+                    existing_rows.append(row)
+        
+        # If overwrite mode and item exists, update all matching rows; otherwise add new row
+        if existing_rows:
+            # Update all existing rows with matching Address
+            for target_row in existing_rows:
+                for i in range(0, self.itemsTable.columnCount(), 1):
+                    # Handle None values from dictionary
+                    value = list(item.values())[i]
+                    entryItem = QTableWidgetItem(value if value is not None else "")
+                    self.itemsTable.setItem(target_row, i, entryItem)
+                self._checkForDuplicate(target_row)
+        else:
+            # Add new row
+            self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
+            target_row = self.itemsTable.rowCount() - 1
+            for i in range(0, self.itemsTable.columnCount(), 1):
+                # Handle None values from dictionary
+                value = list(item.values())[i]
+                entryItem = QTableWidgetItem(value if value is not None else "")
+                self.itemsTable.setItem(target_row, i, entryItem)
+            self._checkForDuplicate(target_row)
 
 
     def ImportButtonClick(self):
