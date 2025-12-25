@@ -51,9 +51,11 @@ class TABList(QWidget):
 
 
     def addListItem(self, item, overwrite=False):
-        if len(item) != self.itemsTable.columnCount():
-            self.parent.addLogEntry(f"Failed to add item to list: {item}")
-            return
+        #ensure all required columns are present in item
+        for column in Constants.LIST_DATA_COLUMNS_REQUIRED:
+            if column not in item:
+                self.parent.addLogEntry(f"Failed to add item to list: {item}")
+                return
 
         # Check if item with same Address already exists
         existing_rows = []
@@ -69,30 +71,29 @@ class TABList(QWidget):
         if existing_rows:
             # Update all existing rows with matching Address
             for target_row in existing_rows:
-                for i in range(0, self.itemsTable.columnCount(), 1):
-                    # Handle None values from dictionary
-                    value = list(item.values())[i]
-                    entryItem = QTableWidgetItem(value if value is not None else "")
-                    self.itemsTable.setItem(target_row, i, entryItem)
+                for column_index in range(self.itemsTable.columnCount()):
+                    column_str = Constants.LIST_DATA_COLUMNS[column_index]
+                    entryItem = QTableWidgetItem(item[column_str] if column_str in item else "")
+                    self.itemsTable.setItem(target_row, column_index, entryItem)
                 self._checkForDuplicate(target_row)
         else:
             # Add new row
             self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
             target_row = self.itemsTable.rowCount() - 1
-            for i in range(0, self.itemsTable.columnCount(), 1):
-                # Handle None values from dictionary
-                value = list(item.values())[i]
-                entryItem = QTableWidgetItem(value if value is not None else "")
-                self.itemsTable.setItem(target_row, i, entryItem)
+            for column_index in range(self.itemsTable.columnCount()):
+                column_str = Constants.LIST_DATA_COLUMNS[column_index]
+                entryItem = QTableWidgetItem(item[column_str] if column_str in item else "")
+                self.itemsTable.setItem(target_row, column_index, entryItem)
             self._checkForDuplicate(target_row)
 
 
     def getListItem(self, row):
         if row in range(0, self.itemsTable.rowCount()):
             item = {}
-            for column in range(0, self.itemsTable.columnCount(), 1):
-                table_item = self.itemsTable.item(row, column)
-                item[Constants.LIST_DATA_COLUMNS[column]] = table_item.text() if table_item is not None else ""
+            for column_index in range(self.itemsTable.columnCount()):
+                table_item = self.itemsTable.item(row, column_index)
+                column_str = Constants.LIST_DATA_COLUMNS[column_index]
+                item[column_str] = table_item.text() if table_item is not None else ""
 
             return item
 
@@ -104,10 +105,10 @@ class TABList(QWidget):
             return
 
         if row in range(0, self.itemsTable.rowCount()):
-            for column in range(0, self.itemsTable.columnCount(), 1):
-                column_name = Constants.LIST_DATA_COLUMNS[column]
-                if column_name in item:
-                    self.itemsTable.item(row, column).setText(item[column_name])
+            for column_index in range(self.itemsTable.columnCount()):
+                column_str = Constants.LIST_DATA_COLUMNS[column_index]
+                if column_str in item:
+                    self.itemsTable.item(row, column_index).setText(item[column_str])
 
 
     def ImportButtonClick(self):
@@ -120,9 +121,9 @@ class TABList(QWidget):
             with open(csvFilename[0], "r", newline='') as csvfile:
                 csvreader = csv.DictReader(csvfile)
 
-                for column in Constants.LIST_DATA_COLUMNS_REQUIRED:
-                    if column not in csvreader.fieldnames:
-                        self.parent.addLogEntry(f"Import failed: {csvFilename[0]} does not contain {column}")
+                for column_str in Constants.LIST_DATA_COLUMNS_REQUIRED:
+                    if column_str not in csvreader.fieldnames:
+                        self.parent.addLogEntry(f"Import failed: {csvFilename[0]} does not contain {column_str}")
                         return
 
                 for row in csvreader:
@@ -146,9 +147,10 @@ class TABList(QWidget):
                 data = []
                 for row in range(0, self.itemsTable.rowCount(), 1):
                     dataEntry = {}
-                    for i in range(0, self.itemsTable.columnCount(), 1):
-                        cell = self.itemsTable.item(row, i)
-                        dataEntry[Constants.LIST_DATA_COLUMNS[i]] = cell.text() if cell is not None else ""
+                    for column_index in range(self.itemsTable.columnCount()):
+                        cell = self.itemsTable.item(row, column_index)
+                        column_str = Constants.LIST_DATA_COLUMNS[column_index]
+                        dataEntry[column_str] = cell.text() if cell is not None else ""
 
                     data.append(dataEntry)
 
@@ -170,7 +172,7 @@ class TABList(QWidget):
 
     def _checkForDuplicate(self, row):
         #get address and see if its a virtual address, if so move on
-        address = self.itemsTable.item(row, Constants.LIST_DATA_COLUMNS.index("Address")).text()
+        address = self.itemsTable.item(row, Constants.LIST_DATA_COLUMNS.index("Address")).text().upper()
         if address in Constants.VIRTUAL_ADDRESSES:
             self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
             return
@@ -181,7 +183,7 @@ class TABList(QWidget):
             if compareRow == row:
                 continue
 
-            compareAddress = self.itemsTable.item(compareRow, Constants.LIST_DATA_COLUMNS.index("Address")).text()
+            compareAddress = self.itemsTable.item(compareRow, Constants.LIST_DATA_COLUMNS.index("Address")).text().upper()
             if compareAddress == address:
                 color = Constants.DUPLICATE_BACKGROUND_COLOR
                 self._setRowColor(compareRow, Constants.DUPLICATE_BACKGROUND_COLOR)
@@ -190,5 +192,5 @@ class TABList(QWidget):
 
 
     def _setRowColor(self, row, color):
-        for i in range(0, self.itemsTable.columnCount(), 1):
-            self.itemsTable.item(row, i).setBackground(color)
+        for column_index in range(self.itemsTable.columnCount()):
+            self.itemsTable.item(row, column_index).setBackground(color)

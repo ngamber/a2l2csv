@@ -1,4 +1,5 @@
 from ast import Constant
+from asyncio import constants
 import lib.Constants as Constants
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QLineEdit, QLabel, QCheckBox
 from PyQt6.QtCore import QThread, QCoreApplication
@@ -107,7 +108,7 @@ class TABA2L(QWidget):
         #get the next address that is not a virtual address
         self.tableRow       += 1
         self.tableItem      = self.parent.getListItem(self.tableRow)
-        while self.tableItem is not None and "Name" in self.tableItem and "Address" in self.tableItem and self.tableItem["Address"] in Constants.VIRTUAL_ADDRESSES:
+        while self.tableItem is not None and "Name" in self.tableItem and "Address" in self.tableItem and self.tableItem["Address"].upper() in Constants.VIRTUAL_ADDRESSES:
             self.tableRow       += 1
             self.tableItem      = self.parent.getListItem(self.tableRow)
 
