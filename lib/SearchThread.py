@@ -1,15 +1,17 @@
+import time
 import lib.Helpers as Helpers
 import lib.Constants as Constants
 from PyQt6.QtCore import QThread, pyqtSignal
 from pya2l import model
 from enum import Enum
-import time
 
 
 class SearchPosition(Enum):
     START   = 1
     CONTAIN = 2
     END     = 3
+    EQ      = 4
+
 
 class SearchType(Enum):
     NAME    = 1
@@ -51,8 +53,11 @@ class SearchThread(QThread):
                 elif self.search_position == SearchPosition.CONTAIN:
                     filter_type = model.Measurement.name.icontains(self.search_string)
 
-                else:
+                elif self.search_position == SearchPosition.END:
                     filter_type = model.Measurement.name.iendswith(self.search_string)
+
+                else:
+                    filter_type = model.Measurement.name == self.search_string
 
             elif self.search_type == SearchType.DESC:
                 if self.search_position == SearchPosition.START:
@@ -61,8 +66,11 @@ class SearchThread(QThread):
                 elif self.search_position == SearchPosition.CONTAIN:
                     filter_type = model.Measurement.longIdentifier.icontains(self.search_string)
 
-                else:
+                elif self.search_position == SearchPosition.END:
                     filter_type = model.Measurement.longIdentifier.iendswith(self.search_string)
+
+                else:
+                    filter_type = model.Measurement.longIdentifier == self.search_string
 
             elif self.search_type == SearchType.ADDR:
                 self.search_string = self.search_string.lower()
@@ -95,7 +103,7 @@ class SearchThread(QThread):
                         select(model.EcuAddress._measurement_rid)
                         .where(model.EcuAddress.address >= search_long)
                     )
-                elif self.search_position == SearchPosition.CONTAIN:
+                elif self.search_position == SearchPosition.CONTAIN or self.search_position == SearchPosition.EQ:
                     # "Contains" for address means exact match
                     address_subquery = (
                         select(model.EcuAddress._measurement_rid)

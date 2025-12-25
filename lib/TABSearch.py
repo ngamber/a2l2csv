@@ -1,6 +1,6 @@
 import lib.Helpers as Helpers
 import lib.Constants as Constants
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup, QCheckBox
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup, QCheckBox, QGridLayout
 from lib.SearchThread import SearchThread
 from lib.SearchThread import SearchPosition
 from lib.SearchThread import SearchType
@@ -33,43 +33,43 @@ class TABSearch(QWidget):
         
         self.mainLayoutBox.addLayout(self.searchLayoutBox)
 
-        #Position radio
-        self.positionLayoutBox = QHBoxLayout()
+        #Radios
+        self.radioLayoutBox = QGridLayout()
         self.startRadioButton = QRadioButton("Starts with")
-        self.positionLayoutBox.addWidget(self.startRadioButton)
+        self.radioLayoutBox.addWidget(self.startRadioButton, 0, 0)
 
         self.containRadioButton = QRadioButton("Contains")
         self.containRadioButton.setChecked(True)
-        self.positionLayoutBox.addWidget(self.containRadioButton)
+        self.radioLayoutBox.addWidget(self.containRadioButton, 0, 1)
 
         self.endRadioButton = QRadioButton("Ends with")
-        self.positionLayoutBox.addWidget(self.endRadioButton)
+        self.radioLayoutBox.addWidget(self.endRadioButton, 0, 2)
 
-        self.typeGroup = QButtonGroup()
-        self.typeGroup.addButton(self.startRadioButton)
-        self.typeGroup.addButton(self.containRadioButton)
-        self.typeGroup.addButton(self.endRadioButton)
+        self.equalsRadioButton = QRadioButton("Equals")
+        self.radioLayoutBox.addWidget(self.equalsRadioButton, 0, 3)
 
-        self.mainLayoutBox.addLayout(self.positionLayoutBox)
-
-        #Type radio
-        self.typeLayoutBox = QHBoxLayout()
         self.nameRadioButton = QRadioButton("Name")
         self.nameRadioButton.setChecked(True)
-        self.typeLayoutBox.addWidget(self.nameRadioButton)
+        self.radioLayoutBox.addWidget(self.nameRadioButton, 1, 0)
 
         self.descriptionRadioButton = QRadioButton("Description")
-        self.typeLayoutBox.addWidget(self.descriptionRadioButton)
+        self.radioLayoutBox.addWidget(self.descriptionRadioButton, 1, 1)
 
         self.addressRadioButton = QRadioButton("Address")
-        self.typeLayoutBox.addWidget(self.addressRadioButton)
+        self.radioLayoutBox.addWidget(self.addressRadioButton, 1, 2)
+
+        self.mainLayoutBox.addLayout(self.radioLayoutBox)
+
+        self.positionGroup = QButtonGroup()
+        self.positionGroup.addButton(self.startRadioButton)
+        self.positionGroup.addButton(self.containRadioButton)
+        self.positionGroup.addButton(self.endRadioButton)
+        self.positionGroup.addButton(self.equalsRadioButton)
 
         self.typeGroup = QButtonGroup()
         self.typeGroup.addButton(self.nameRadioButton)
         self.typeGroup.addButton(self.descriptionRadioButton)
         self.typeGroup.addButton(self.addressRadioButton)
-
-        self.mainLayoutBox.addLayout(self.typeLayoutBox)
 
         #Search button
         self.searchPushButton = QPushButton("Search")
@@ -118,8 +118,11 @@ class TABSearch(QWidget):
             elif self.containRadioButton.isChecked():
                 self.searchThread.search_position   = SearchPosition.CONTAIN
 
-            else:
+            elif self.endRadioButton.isChecked():
                 self.searchThread.search_position   = SearchPosition.END
+
+            else:
+                self.searchThread.search_position   = SearchPosition.EQ
 
             #set search type
             if self.nameRadioButton.isChecked():

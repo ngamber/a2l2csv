@@ -1,8 +1,6 @@
-from ast import Constant
-from asyncio import constants
+import time
 import lib.Constants as Constants
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QLineEdit, QLabel, QCheckBox
-from PyQt6.QtCore import QThread, QCoreApplication
 from lib.LoadA2LThread import LoadA2LThread
 from lib.SearchThread import SearchThread
 from lib.SearchThread import SearchPosition
@@ -14,20 +12,25 @@ class TABA2L(QWidget):
         super().__init__(parent)
         self.parent     = parent
 
+        #Load
         self.loadThread = LoadA2LThread()
         self.loadThread.logMessage.connect(self.parent.addLogEntry)
         self.loadThread.finished.connect(self.onFinishedLoading)
 
+        #Search
         self.searchThread = SearchThread()
         self.searchThread.addItem.connect(self._searchAddItem)
         self.searchThread.finished.connect(self._searchFinished)
-        self.searchThread.search_position   = SearchPosition.CONTAIN
+        self.searchThread.search_position   = SearchPosition.EQ
 
-        self.tableItem      = ""
-        self.tableRow       = 0
-        self.searchItem     = None
-        self.searchFound    = False
-        self.overWritting   = False
+        self.tableItem          = ""
+        self.tableRow           = 0
+        self.searchItem         = None
+        self.searchFound        = False
+        self.overWritting       = False
+        self.startTime          = 0
+        self.replaceItemCount   = 0
+        self.searchItemCount    = 0
 
         #Main layout box
         self.mainLayoutBox = QVBoxLayout()
@@ -72,9 +75,12 @@ class TABA2L(QWidget):
 
 
     def LoadButtonClick(self):
+        self.loadPushButton.setEnabled(False)
+        self.parent.tabs.setTabEnabled(1, False)
+        self.parent.tabs.setTabEnabled(2, False)
+
         self.loadThread.filename = self.fileEditBox.text()
         self.loadThread.start()
-        self.loadPushButton.setEnabled(False)
 
 
     def onFinishedLoading(self):
@@ -83,7 +89,7 @@ class TABA2L(QWidget):
             self._overwritePIDS()
 
         else:
-            self._loadA2L()
+            self._loadA2LSession()
 
 
     def _checkOverwrite(self):
@@ -95,8 +101,11 @@ class TABA2L(QWidget):
             self.parent.addLogEntry(f"Overwrite in progress, unable to start overwrite task")
             return
 
-        self.overWritting   = True
-        self.tableRow      = -1
+        self.overWritting       = True
+        self.tableRow           = -1
+        self.startTime          = time.time()
+        self.replaceItemCount   = 0
+        self.searchItemCount    = 0
 
         self._startNextSearch()
 
@@ -114,6 +123,8 @@ class TABA2L(QWidget):
 
         if self.tableItem is not None and "Name" in self.tableItem and "Address" in self.tableItem:
             #start search in original database search for address in pid list
+            self.searchItemCount                +=1
+
             self.searchThread.a2lsession        = self.parent.a2lsession
             self.searchThread.search_string     = self.tableItem["Address"]
             self.searchThread.search_type       = SearchType.ADDR
@@ -122,7 +133,10 @@ class TABA2L(QWidget):
 
         else:
             self.overWritting = False
-            self._loadA2L()
+            self._loadA2LSession()
+
+            elapsed_time = time.time() - self.startTime
+            self.parent.addLogEntry(f"Replaced {self.replaceItemCount} out of {self.searchItemCount} items in {elapsed_time:.2f} seconds")
 
 
     def _searchAddItem(self, item):
@@ -133,6 +147,7 @@ class TABA2L(QWidget):
             if item is None or item["Name"] != self.searchItem["Name"]:
                 return
 
+            self.replaceItemCount           += 1
             self.searchThread.items_left    = 0
             self.searchItem                 = item
             self.searchFound                = True
@@ -144,14 +159,14 @@ class TABA2L(QWidget):
     def _searchFinished(self):
         if self.searchThread.search_type == SearchType.NAME:        #search for name within the new database has finished
             if self.searchItem is None or self.searchFound == False:
-                self.parent.addLogEntry(f"Unable to find address {self.tableItem["Address"]} [{self.tableItem["Name"]}] in new database")
+                self.parent.addLogEntry(f"Unable to find name {self.searchItem["Name"] if self.searchItem is not None else ""} [{self.tableItem["Name"]}] in new database")
 
             self._startNextSearch()
 
         else:                                                       #search for address within the original database has finished
             #if we didn't find the address we continue to the next PID
             if self.searchItem is None:
-                self.parent.addLogEntry(f"Unable to find {self.tableItem["Name"]} [{self.tableItem["Address"]}] in original database")
+                self.parent.addLogEntry(f"Unable to find address {self.tableItem["Address"]} [{self.tableItem["Name"]}] in original database")
                 self._startNextSearch()
 
             else:
@@ -159,11 +174,11 @@ class TABA2L(QWidget):
                 self.searchThread.a2lsession        = self.loadThread.a2lsession
                 self.searchThread.search_string     = self.searchItem["Name"]
                 self.searchThread.search_type       = SearchType.NAME
-                self.searchThread.items_left        = Constants.MAX_SEARCH_ITEMS
+                self.searchThread.items_left        = 0
                 self.searchThread.start()
 
 
-    def _loadA2L(self):
+    def _loadA2LSession(self):
         #set current a2l database
         self.parent.a2ldb       = self.loadThread.a2ldb
         self.parent.a2lsession  = self.loadThread.a2lsession
@@ -174,4 +189,6 @@ class TABA2L(QWidget):
 
         # Switch to Search tab if file loaded successfully
         if self.parent.a2lsession is not None:
+            self.parent.tabs.setTabEnabled(1, True)
+            self.parent.tabs.setTabEnabled(2, True)
             self.parent.tabs.setCurrentIndex(1)
