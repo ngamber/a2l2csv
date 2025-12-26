@@ -1,5 +1,6 @@
 import subprocess
 import sys
+import lib.Constants as Constants
 from PyQt6.QtCore import QThread, pyqtSignal
 from pya2l import DB
 
@@ -26,15 +27,16 @@ class LoadA2LThread(QThread):
             
             # Apply SQLite performance optimizations
             # These pragmas improve query performance on all platforms (Windows, macOS, Linux)
-            try:
-                self.a2lsession.execute("PRAGMA journal_mode=WAL")
-                self.a2lsession.execute("PRAGMA synchronous=NORMAL")
-                self.a2lsession.execute("PRAGMA cache_size=-64000")  # 64MB cache
-                self.a2lsession.execute("PRAGMA temp_store=MEMORY")
-                self.a2lsession.commit()
-            except Exception as e:
-                # If pragmas fail, log but continue - database will still work
-                self.logMessage.emit(f"Note: Could not apply SQLite optimizations: {e}")
+            if Constants.APPLY_SQL_OPTIMIZATIONS:
+                try:
+                    self.a2lsession.execute("PRAGMA journal_mode=WAL")
+                    self.a2lsession.execute("PRAGMA synchronous=NORMAL")
+                    self.a2lsession.execute("PRAGMA cache_size=-64000")  # 64MB cache
+                    self.a2lsession.execute("PRAGMA temp_store=MEMORY")
+                    self.a2lsession.commit()
+                except Exception as e:
+                    # If pragmas fail, log but continue - database will still work
+                    self.logMessage.emit(f"Note: Could not apply SQLite optimizations: {e}")
 
             self.logMessage.emit("Database loaded")
 
