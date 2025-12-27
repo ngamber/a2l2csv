@@ -183,6 +183,8 @@ class TABSearch(QWidget):
             }
             self.parent.addListItem(item, overwrite)
 
+        self.parent.checkForDuplicates()
+
         self.parent.addLogEntry(f"Added {len(selected_rows)} items to list")
 
 

@@ -75,7 +75,7 @@ class TABList(QWidget):
                     column_str = Constants.LIST_DATA_COLUMNS[column_index]
                     entryItem = QTableWidgetItem(item[column_str] if column_str in item else "")
                     self.itemsTable.setItem(target_row, column_index, entryItem)
-                self._checkForDuplicate(target_row)
+
         else:
             # Add new row
             self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
@@ -84,7 +84,6 @@ class TABList(QWidget):
                 column_str = Constants.LIST_DATA_COLUMNS[column_index]
                 entryItem = QTableWidgetItem(item[column_str] if column_str in item else "")
                 self.itemsTable.setItem(target_row, column_index, entryItem)
-            self._checkForDuplicate(target_row)
 
 
     def getListItem(self, row):
@@ -140,6 +139,8 @@ class TABList(QWidget):
                 for row in csvreader:
                     self.addListItem(row, overwrite)
 
+                self.checkForDuplicates()
+
                 self.parent.addLogEntry(f"Import successful: {csvFilename[0]}")
 
         except Exception as e:
@@ -177,6 +178,10 @@ class TABList(QWidget):
         while len(self.itemsTable.selectedItems()):
             self.itemsTable.removeRow(self.itemsTable.selectedItems()[0].row())
 
+        self.checkForDuplicates()
+
+
+    def checkForDuplicates(self):
         for row in range(0, self.itemsTable.rowCount(), 1):
             self._checkForDuplicate(row)
 

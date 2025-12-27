@@ -73,6 +73,9 @@ class MainWindow(QMainWindow):
     def updateListItem(self, item, row):
         self.listTab.updateListItem(item, row)
 
+    def checkForDuplicates(self):
+        self.listTab.checkForDuplicates()
+
 
     def checkAndLoadPendingCSV(self):
         """Check if A2L is loaded and load pending CSV if present"""
