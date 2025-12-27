@@ -1,2 +1,3 @@
-pya2ldb
 PyQt6
+pya2l
+pya2ldb
