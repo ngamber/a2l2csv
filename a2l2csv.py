@@ -1,6 +1,5 @@
 import sys
 import os
-import csv
 import argparse
 import lib.Constants as Constants
 from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QListWidget, QTabWidget
@@ -53,7 +52,9 @@ class MainWindow(QMainWindow):
             self.a2lTab.LoadButtonClick()
         elif csv_file:
             # If only CSV provided without A2L, load it immediately
-            self.loadCSVFile(csv_file)
+            self.listTab.ImportButtonClick(csvFilename=csv_file)
+            # Switch to List tab to show the imported data
+            self.tabs.setCurrentIndex(2)
 
 
     def addLogEntry(self, entry):
@@ -76,39 +77,11 @@ class MainWindow(QMainWindow):
     def checkAndLoadPendingCSV(self):
         """Check if A2L is loaded and load pending CSV if present"""
         if self.pending_csv_file and self.a2lsession:
-            self.loadCSVFile(self.pending_csv_file)
+            # Use TABList's ImportButtonClick method with the filename
+            self.listTab.ImportButtonClick(csvFilename=self.pending_csv_file)
+            # Switch to List tab to show the imported data
+            self.tabs.setCurrentIndex(2)
             self.pending_csv_file = None  # Clear after loading
-
-
-    def loadCSVFile(self, csv_file):
-        """Load a CSV file into the List tab"""
-        try:
-            with open(csv_file, "r", newline='') as csvfile:
-                csvreader = csv.DictReader(csvfile)
-                
-                # Validate required columns
-                if csvreader.fieldnames is None:
-                    self.addLogEntry(f"Import failed: {csv_file} has no header row")
-                    return
-                
-                for column_str in Constants.LIST_DATA_COLUMNS_REQUIRED:
-                    if column_str not in csvreader.fieldnames:
-                        self.addLogEntry(f"Import failed: {csv_file} does not contain required column '{column_str}'")
-                        return
-                
-                # Import all rows
-                row_count = 0
-                for row in csvreader:
-                    self.addListItem(row, overwrite=False)
-                    row_count += 1
-                
-                self.addLogEntry(f"Loaded {row_count} PIDs from {csv_file}")
-                
-                # Switch to List tab to show the imported data
-                self.tabs.setCurrentIndex(2)
-                
-        except Exception as e:
-            self.addLogEntry(f"Failed to load CSV: {csv_file} - {e}")
 
 
 def print_usage():
