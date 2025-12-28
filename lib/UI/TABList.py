@@ -157,7 +157,7 @@ class TABList(QWidget):
                 csvwriter = csv.DictWriter(csvfile, fieldnames=Constants.LIST_DATA_COLUMNS)
 
                 data = []
-                for row in range(self.itemsTable.rowCount(), 1):
+                for row in range(self.itemsTable.rowCount()):
                     dataEntry = {}
                     for column_index in range(self.itemsTable.columnCount()):
                         cell = self.itemsTable.item(row, column_index)
@@ -182,6 +182,7 @@ class TABList(QWidget):
 
 
     def checkForDuplicates(self):
+        #if the user has disabled checking for duplicates return
         if Constants.CHECK_FOR_DUPLICATES == False:
             return
 
