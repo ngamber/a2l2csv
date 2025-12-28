@@ -150,6 +150,10 @@ class TABSearch(QWidget):
         for item in self.itemsTable.selectedItems():
             selected_rows.add(item.row())
 
+        # Collect all items first, then add them in batch
+        items_to_add = []
+        skipped_count = 0
+        
         for row in sorted(selected_rows):
             # Get cell values safely, handling None cells
             name_item       = self.itemsTable.item(row, 0)
@@ -165,7 +169,7 @@ class TABSearch(QWidget):
 
             # Skip row if essential fields are missing
             if not all([name_item, address_item, length_item, signed_item, min_item, max_item]):
-                self.parent.addLogEntry(f"Skipped row {row + 1}: missing required fields")
+                skipped_count += 1
                 continue
 
             item = {
@@ -186,11 +190,20 @@ class TABSearch(QWidget):
                 "Assign To"     : "",
                 "Description"   : desc_item.text() if desc_item else ""
             }
+            items_to_add.append(item)
+        
+        # Add all items at once without checking duplicates after each
+        for item in items_to_add:
             self.parent.addListItem(item, overwrite)
-
+        
+        # Check for duplicates only once after all items are added
         self.parent.checkForDuplicates()
 
-        self.parent.addLogEntry(f"Added {len(selected_rows)} items to list")
+        # Log results
+        if skipped_count > 0:
+            self.parent.addLogEntry(f"Added {len(items_to_add)} items to list ({skipped_count} skipped due to missing fields)")
+        else:
+            self.parent.addLogEntry(f"Added {len(items_to_add)} items to list")
 
 
     def onFinishedSearch(self):

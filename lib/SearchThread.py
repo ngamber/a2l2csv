@@ -101,9 +101,6 @@ class SearchThread(QThread):
                         "Description"   : item["Description"]
                     }
 
-                    # Emit single item if connected
-                    self.addItem.emit(result_item)
-
                     #quit if the items count has been exceeded
                     self.items_left -= 1
                     if self.items_left < 0:

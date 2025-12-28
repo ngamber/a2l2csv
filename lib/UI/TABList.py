@@ -194,28 +194,27 @@ class TABList(QWidget):
             for row in range(self.itemsTable.rowCount()):
                 self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
 
+            # Build a hash map of addresses to row indices for O(n) performance
+            # This replaces the O(n²) nested loop approach
+            address_map = {}  # address -> list of row indices
+            
             for row in range(self.itemsTable.rowCount()):
-                #if the row is already highlighted continue
-                if self.itemsTable.item(row, 0).background() == Constants.DUPLICATE_BACKGROUND_COLOR:
-                    continue
-
-                #get address and see if its a virtual address, if so move on
                 address = self.itemsTable.item(row, address_index).text().upper()
+                
+                # Skip virtual addresses
                 if address in Constants.VIRTUAL_ADDRESSES:
-                    self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
                     continue
-
-                #now compare address to all rows except its own
-                isDuplicate = False
-                for compareRow in range(row + 1, self.itemsTable.rowCount()):
-                    compareAddress = self.itemsTable.item(compareRow, address_index).text().upper()
-                    if compareAddress == address:
-                        isDuplicate = True
-                        self._setRowColor(compareRow, Constants.DUPLICATE_BACKGROUND_COLOR)
-
-                #did we find a duplicate?
-                if isDuplicate:
-                    self._setRowColor(row, Constants.DUPLICATE_BACKGROUND_COLOR)
+                
+                # Add row to address map
+                if address not in address_map:
+                    address_map[address] = []
+                address_map[address].append(row)
+            
+            # Highlight all rows that have duplicate addresses
+            for address, rows in address_map.items():
+                if len(rows) > 1:  # Duplicate found
+                    for row in rows:
+                        self._setRowColor(row, Constants.DUPLICATE_BACKGROUND_COLOR)
 
         except Exception as e:
             self.parent.addLogEntry(f"Check for duplicates failed: {e}")
