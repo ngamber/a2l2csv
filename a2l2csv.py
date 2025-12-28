@@ -2,31 +2,38 @@ import sys
 import os
 import argparse
 import lib.Constants as Constants
+from lib.Constants import DBType
 from PyQt6.QtWidgets import QMainWindow, QApplication, QWidget, QVBoxLayout, QListWidget, QTabWidget
 from pya2l import DB
-from lib.UI.TABA2L import TABA2L
+from lib.UI.TABDatabase import TABDatabase
 from lib.UI.TABSearch import TABSearch
 from lib.UI.TABList import TABList
 
 
 class MainWindow(QMainWindow):
-    def __init__(self, a2l_file=None, csv_file=None):
+    def __init__(self, db_file=None, csv_file=None):
         super().__init__()
 
-        #Variables used to hold a2l database
-        self.a2ldb      = DB()
-        self.a2lsession = None
-        self.pending_csv_file = csv_file  # Store CSV file to load after A2L is loaded
+        #Variables used to hold database
+        self.db_type        = DBType.NONE
+        self.a2ldb          = DB()
+        self.a2lsession     = None
+        self.csv_name_db    = {}
+        self.csv_desc_db    = {}
+        self.csv_address_db = {}
+
+        # Store CSV file to load after A2L is loaded
+        self.pending_csv_file = csv_file 
 
         #set title
         self.setWindowTitle(Constants.APPLICATION_VERSION_STRING)
 
         #tabs
         self.listTab = TABList(self)
-        self.a2lTab = TABA2L(self)
+        self.dbTab = TABDatabase(self)
 
         self.tabs = QTabWidget()
-        self.tabs.addTab(self.a2lTab, "A2L")
+        self.tabs.addTab(self.dbTab, "Database")
         self.tabs.addTab(TABSearch(self), "Search")
         self.tabs.addTab(self.listTab, "List")
 
@@ -46,12 +53,12 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(widget)
         self.show()
 
-        # If a2l_file was provided, load it automatically
-        if a2l_file:
-            self.a2lTab.fileEditBox.setText(a2l_file)
-            self.a2lTab.LoadButtonClick()
+        # If db_file was provided, load it automatically
+        if db_file:
+            self.dbTab.fileEditBox.setText(db_file)
+            self.dbTab.LoadButtonClick()
         elif csv_file:
-            # If only CSV provided without A2L, load it immediately
+            # If only CSV provided without DB, load it immediately
             self.listTab.ImportButtonClick(csvFilename=csv_file)
             # Switch to List tab to show the imported data
             self.tabs.setCurrentIndex(2)
@@ -74,8 +81,12 @@ class MainWindow(QMainWindow):
         self.listTab.updateListItem(item, row)
 
 
+    def checkForDuplicates(self):
+        self.listTab.checkForDuplicates()
+
+
     def checkAndLoadPendingCSV(self):
-        """Check if A2L is loaded and load pending CSV if present"""
+        """Check if DB is loaded and load pending CSV if present"""
         if self.pending_csv_file and self.a2lsession:
             # Use TABList's ImportButtonClick method with the filename
             self.listTab.ImportButtonClick(csvFilename=self.pending_csv_file)
@@ -87,18 +98,18 @@ class MainWindow(QMainWindow):
 def print_usage():
     """Print usage information and exit."""
     print(f"""
-Usage: python a2l2csv.py [A2L_FILE] [OPTIONS]
+Usage: python a2l2csv.py [DB_FILE] [OPTIONS]
 
 A2L to CSV converter application.
 
 Arguments:
-  A2L_FILE              Optional path to an .a2l or .a2ldb file to load automatically.
+  DB_FILE              Optional path to an .a2l, .a2ldb or .csv file to load automatically.
                         If provided, the application will skip the Load A2L tab and go
                         directly to the Search tab with the file loaded.
 
 Options:
   -p, --pid-list FILE   Optional path to a .csv file containing PID list to import.
-                        If provided with A2L_FILE, the CSV will be loaded after the A2L.
+                        If provided with DB_FILE, the CSV will be loaded after the DB.
                         If provided alone, the CSV will be loaded immediately.
   -h, --help            Show this help message and exit.
 
@@ -106,19 +117,20 @@ Examples:
   python a2l2csv.py                              # Start with empty tabs
   python a2l2csv.py myfile.a2l                   # Load A2L file automatically
   python a2l2csv.py database.a2ldb               # Load A2L database automatically
+  python a2l2csv.py database.csv                 # Load CSV database automatically
   python a2l2csv.py myfile.a2l -p pids.csv       # Load A2L then import PID list
   python a2l2csv.py --pid-list pids.csv          # Import PID list only
 
 Supported file types:
-  A2L files: .a2l, .a2ldb
+  DB files: .a2l, .a2ldb or .csv
   CSV files: .csv (must contain required PID columns)
 """)
     sys.exit(1)
 
 
-def validate_a2l_file(filepath):
+def validate_db_file(filepath):
     """
-    Validate that the provided file path is a valid .a2l or .a2ldb file.
+    Validate that the provided file path is a valid .a2l, .a2ldb or .csv file.
     
     Args:
         filepath: Path to the file to validate
@@ -134,13 +146,13 @@ def validate_a2l_file(filepath):
     
     # Check if file exists
     if not os.path.isfile(filepath):
-        print(f"Error: A2L file not found: {filepath}")
+        print(f"Error: Database file not found: {filepath}")
         print_usage()
     
     # Check file extension
     _, ext = os.path.splitext(filepath)
-    if ext.lower() not in ['.a2l', '.a2ldb']:
-        print(f"Error: Invalid A2L file type '{ext}'. Expected .a2l or .a2ldb")
+    if ext.lower() not in ['.a2l', '.a2ldb', '.csv']:
+        print(f"Error: Invalid database file type '{ext}'. Expected .a2l, .a2ldb or .csv")
         print_usage()
     
     return os.path.abspath(filepath)
@@ -180,7 +192,7 @@ def validate_csv_file(filepath):
 if __name__ == "__main__":
     # Parse command line arguments
     parser = argparse.ArgumentParser(add_help=False)  # Disable default help to use custom
-    parser.add_argument('a2l_file', nargs='?', help='Optional .a2l or .a2ldb file to load')
+    parser.add_argument('db_file', nargs='?', help='Optional .a2l, .a2ldb or .csv file to load')
     parser.add_argument('-p', '--pid-list', dest='csv_file', help='Optional .csv file with PID list to import')
     parser.add_argument('-h', '--help', action='store_true', help='Show help message')
     
@@ -191,10 +203,10 @@ if __name__ == "__main__":
         print_usage()
     
     # Validate files if provided
-    a2l_file = validate_a2l_file(args.a2l_file) if args.a2l_file else None
+    db_file = validate_db_file(args.db_file) if args.db_file else None
     csv_file = validate_csv_file(args.csv_file) if args.csv_file else None
     
     # Start application
     app = QApplication(sys.argv)
-    w = MainWindow(a2l_file=a2l_file, csv_file=csv_file)
+    w = MainWindow(db_file=db_file, csv_file=csv_file)
     app.exec()

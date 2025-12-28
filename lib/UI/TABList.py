@@ -75,7 +75,7 @@ class TABList(QWidget):
                     column_str = Constants.LIST_DATA_COLUMNS[column_index]
                     entryItem = QTableWidgetItem(item[column_str] if column_str in item else "")
                     self.itemsTable.setItem(target_row, column_index, entryItem)
-                self._checkForDuplicate(target_row)
+
         else:
             # Add new row
             self.itemsTable.setRowCount(self.itemsTable.rowCount() + 1)
@@ -84,11 +84,10 @@ class TABList(QWidget):
                 column_str = Constants.LIST_DATA_COLUMNS[column_index]
                 entryItem = QTableWidgetItem(item[column_str] if column_str in item else "")
                 self.itemsTable.setItem(target_row, column_index, entryItem)
-            self._checkForDuplicate(target_row)
 
 
     def getListItem(self, row):
-        if row in range(0, self.itemsTable.rowCount()):
+        if row in range(self.itemsTable.rowCount()):
             item = {}
             for column_index in range(self.itemsTable.columnCount()):
                 table_item = self.itemsTable.item(row, column_index)
@@ -104,7 +103,7 @@ class TABList(QWidget):
         if item is None:
             return
 
-        if row in range(0, self.itemsTable.rowCount()):
+        if row in range(self.itemsTable.rowCount()):
             for column_index in range(self.itemsTable.columnCount()):
                 column_str = Constants.LIST_DATA_COLUMNS[column_index]
                 if column_str in item:
@@ -129,7 +128,7 @@ class TABList(QWidget):
 
     def _loadCSV(self, overwrite, csvFilename):
         try:
-            with open(csvFilename[0], "r", newline='') as csvfile:
+            with open(csvFilename[0], "r", encoding="latin-1", newline='') as csvfile:
                 csvreader = csv.DictReader(csvfile)
 
                 for column_str in Constants.LIST_DATA_COLUMNS_REQUIRED:
@@ -139,6 +138,8 @@ class TABList(QWidget):
 
                 for row in csvreader:
                     self.addListItem(row, overwrite)
+
+                self.checkForDuplicates()
 
                 self.parent.addLogEntry(f"Import successful: {csvFilename[0]}")
 
@@ -152,11 +153,11 @@ class TABList(QWidget):
             return
 
         try:
-            with open(csvFilename[0], "w", newline='') as csvfile:
+            with open(csvFilename[0], "w", encoding="latin-1", newline='') as csvfile:
                 csvwriter = csv.DictWriter(csvfile, fieldnames=Constants.LIST_DATA_COLUMNS)
 
                 data = []
-                for row in range(0, self.itemsTable.rowCount(), 1):
+                for row in range(self.itemsTable.rowCount()):
                     dataEntry = {}
                     for column_index in range(self.itemsTable.columnCount()):
                         cell = self.itemsTable.item(row, column_index)
@@ -177,29 +178,47 @@ class TABList(QWidget):
         while len(self.itemsTable.selectedItems()):
             self.itemsTable.removeRow(self.itemsTable.selectedItems()[0].row())
 
-        for row in range(0, self.itemsTable.rowCount(), 1):
-            self._checkForDuplicate(row)
+        self.checkForDuplicates()
 
 
-    def _checkForDuplicate(self, row):
-        #get address and see if its a virtual address, if so move on
-        address = self.itemsTable.item(row, Constants.LIST_DATA_COLUMNS.index("Address")).text().upper()
-        if address in Constants.VIRTUAL_ADDRESSES:
-            self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
+    def checkForDuplicates(self):
+        #if the user has disabled checking for duplicates return
+        if Constants.CHECK_FOR_DUPLICATES == False:
             return
 
-        #now compare address to all rows except its own
-        color = Constants.NORMAL_BACKGROUND_COLOR
-        for compareRow in range(0, self.itemsTable.rowCount(), 1):
-            if compareRow == row:
-                continue
+        try:
+            #get address index
+            address_index = Constants.LIST_DATA_COLUMNS.index("Address")
 
-            compareAddress = self.itemsTable.item(compareRow, Constants.LIST_DATA_COLUMNS.index("Address")).text().upper()
-            if compareAddress == address:
-                color = Constants.DUPLICATE_BACKGROUND_COLOR
-                self._setRowColor(compareRow, Constants.DUPLICATE_BACKGROUND_COLOR)
+            #reset all rows to normal color
+            for row in range(self.itemsTable.rowCount()):
+                self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
 
-        self._setRowColor(row, color)
+            for row in range(self.itemsTable.rowCount()):
+                #if the row is already highlighted continue
+                if self.itemsTable.item(row, 0).background() == Constants.DUPLICATE_BACKGROUND_COLOR:
+                    continue
+
+                #get address and see if its a virtual address, if so move on
+                address = self.itemsTable.item(row, address_index).text().upper()
+                if address in Constants.VIRTUAL_ADDRESSES:
+                    self._setRowColor(row, Constants.NORMAL_BACKGROUND_COLOR)
+                    continue
+
+                #now compare address to all rows except its own
+                isDuplicate = False
+                for compareRow in range(row + 1, self.itemsTable.rowCount()):
+                    compareAddress = self.itemsTable.item(compareRow, address_index).text().upper()
+                    if compareAddress == address:
+                        isDuplicate = True
+                        self._setRowColor(compareRow, Constants.DUPLICATE_BACKGROUND_COLOR)
+
+                #did we find a duplicate?
+                if isDuplicate:
+                    self._setRowColor(row, Constants.DUPLICATE_BACKGROUND_COLOR)
+
+        except Exception as e:
+            self.parent.addLogEntry(f"Check for duplicates failed: {e}")
 
 
     def _setRowColor(self, row, color):

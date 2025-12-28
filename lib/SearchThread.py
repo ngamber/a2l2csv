@@ -3,20 +3,9 @@ import lib.Helpers as Helpers
 import lib.Constants as Constants
 from PyQt6.QtCore import QThread, pyqtSignal
 from pya2l import model
-from enum import Enum
-
-
-class SearchPosition(Enum):
-    START   = 1
-    CONTAIN = 2
-    END     = 3
-    EQ      = 4
-
-
-class SearchType(Enum):
-    NAME    = 1
-    DESC    = 2
-    ADDR    = 3
+from lib.Constants import SearchPosition
+from lib.Constants import SearchType
+from lib.Constants import DBType
 
 
 class SearchThread(QThread):
@@ -29,7 +18,12 @@ class SearchThread(QThread):
     def __init__(self):
         super().__init__()
 
+        self.db_type            = DBType.NONE
         self.a2lsession         = None
+        self.csv_name_db        = {}
+        self.csv_desc_db        = {}
+        self.csv_address_db     = {}
+
         self.search_string      = ""
         self.search_position    = SearchPosition.CONTAIN
         self.search_type        = SearchType.NAME
@@ -38,6 +32,106 @@ class SearchThread(QThread):
 
 
     def run(self):
+        if self.db_type == DBType.A2L:
+            self._runA2L()
+
+        elif self.db_type == DBType.CSV:
+            self._runCSV()
+
+        else:
+            self.logMessage.emit("Search: No database loaded")
+
+
+
+    def _runCSV(self):
+        start_time = time.time()
+        try:
+            #get dictionary type
+            dict_type = None
+            if self.search_type == SearchType.NAME:
+                dict_type = self.csv_name_db
+
+            elif self.search_type == SearchType.DESC:
+                dict_type = self.csv_desc_db
+
+            elif self.search_type == SearchType.ADDR:
+                dict_type = self.csv_address_db
+                if self.search_position == SearchPosition.CONTAIN:
+                    self.search_position = SearchPosition.EQ
+
+            else:
+                self.logMessage.emit("Search: invalid search type")
+                return
+
+            if len(dict_type) == 0:
+                self.logMessage.emit("Search: No database loaded")
+                return
+
+            if self.search_position == SearchPosition.START:
+                results_dict = {key: value for key, value in dict_type.items() if key.lower().startswith(self.search_string.lower())}
+
+            elif self.search_position == SearchPosition.CONTAIN:
+                results_dict = {key: value for key, value in dict_type.items() if self.search_string.lower() in key.lower()}
+
+            elif self.search_position == SearchPosition.END:
+                results_dict = {key: value for key, value in dict_type.items() if key.lower().endswith(self.search_string.lower())}
+
+            else:
+                results_dict = {key: value for key, value in dict_type.items() if key.lower() == self.search_string.lower()}
+
+            if results_dict is not None:
+                # Batch process results for better UI performance
+                results_batch = []
+                item_count = 0
+
+                for key, value in results_dict.items():
+                    item = results_dict[key]
+
+                    #build our result item
+                    result_item = {
+                        "Name"          : item["Name"],
+                        "Unit"          : item["Unit"],
+                        "Equation"      : item["Equation"],
+                        "Format"        : item["Format"],
+                        "Address"       : item["Address"],
+                        "Length"        : item["Length"],
+                        "Signed"        : item["Signed"],
+                        "Min"           : item["ProgMin"],
+                        "Max"           : item["ProgMax"],
+                        "Description"   : item["Description"]
+                    }
+
+                    # Emit single item if connected
+                    self.addItem.emit(result_item)
+
+                    #quit if the items count has been exceeded
+                    self.items_left -= 1
+                    if self.items_left < 0:
+                        elapsed_time = time.time() - start_time
+                        self.logMessage.emit(f"Max entries found {item_count} in {elapsed_time:.2f} seconds")
+                        return
+                
+                    results_batch.append(result_item)
+                    item_count += 1
+                
+                    # Emit batch when it reaches batch_size
+                    if len(results_batch) >= self.item_batch_size:
+                        self.addItemsBatch.emit(results_batch)
+                        results_batch = []
+
+                # Emit any remaining items in the final batch
+                if results_batch:
+                    self.addItemsBatch.emit(results_batch)
+
+                elapsed_time = time.time() - start_time
+                self.logMessage.emit(f"Found {item_count} items in {elapsed_time:.2f} seconds")
+
+        except Exception as e:
+            elapsed_time = time.time() - start_time
+            self.logMessage.emit(f"Search: error - {e} (after {elapsed_time:.2f} seconds)")
+
+
+    def _runA2L(self):
         if self.a2lsession is None:
             self.logMessage.emit("Search: No database loaded")
             return
@@ -170,10 +264,26 @@ class SearchThread(QThread):
                     # Skip if conversion not found
                     continue
 
+                compuMethod = compu_methods.get(item.conversion)
+
+                #build format string
+                try:
+                    format_precision = int(compuMethod.format.split(".")[-1].lstrip().rstrip())
+
+                    if format_precision > Constants.FORMAT_PRECISION_LIMIT:
+                        decimaformat_precisionl_places = Constants.FORMAT_PRECISION_LIMIT
+
+                    format_str = f"%01.{format_precision}f"
+
+                except:
+                    format_str = "%01.0f"
+
+                #build our result item
                 result_item = {
                     "Name"          : item.name,
                     "Unit"          : compuMethod.unit,
                     "Equation"      : self.getEquation(item, compuMethod),
+                    "Format"        : format_str,
                     "Address"       : hex(item.ecu_address.address),
                     "Length"        : Constants.DATA_LENGTH[item.datatype],
                     "Signed"        : Constants.DATA_SIGNED[item.datatype],

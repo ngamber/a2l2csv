@@ -2,8 +2,8 @@ import lib.Helpers as Helpers
 import lib.Constants as Constants
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup, QCheckBox, QGridLayout
 from lib.SearchThread import SearchThread
-from lib.SearchThread import SearchPosition
-from lib.SearchThread import SearchType
+from lib.Constants import SearchPosition
+from lib.Constants import SearchType
 
 
 class TABSearch(QWidget):
@@ -134,9 +134,13 @@ class TABSearch(QWidget):
             else:
                 self.searchThread.search_type   = SearchType.ADDR
 
-            self.searchThread.items_left    = Constants.MAX_SEARCH_ITEMS
-            self.searchThread.search_string = self.inputEditBox.text()
-            self.searchThread.a2lsession    = self.parent.a2lsession
+            self.searchThread.db_type           = self.parent.db_type
+            self.searchThread.a2lsession        = self.parent.a2lsession
+            self.searchThread.csv_name_db       = self.parent.csv_name_db
+            self.searchThread.csv_desc_db       = self.parent.csv_desc_db
+            self.searchThread.csv_address_db    = self.parent.csv_address_db
+            self.searchThread.items_left        = Constants.MAX_SEARCH_ITEMS
+            self.searchThread.search_string     = self.inputEditBox.text()
             self.searchThread.start()
 
 
@@ -151,12 +155,13 @@ class TABSearch(QWidget):
             name_item       = self.itemsTable.item(row, 0)
             unit_item       = self.itemsTable.item(row, 1)
             equation_item   = self.itemsTable.item(row, 2)
-            address_item    = self.itemsTable.item(row, 3)
-            length_item     = self.itemsTable.item(row, 4)
-            signed_item     = self.itemsTable.item(row, 5)
-            min_item        = self.itemsTable.item(row, 6)
-            max_item        = self.itemsTable.item(row, 7)
-            desc_item       = self.itemsTable.item(row, 8)
+            format_item     = self.itemsTable.item(row, 3)
+            address_item    = self.itemsTable.item(row, 4)
+            length_item     = self.itemsTable.item(row, 5)
+            signed_item     = self.itemsTable.item(row, 6)
+            min_item        = self.itemsTable.item(row, 7)
+            max_item        = self.itemsTable.item(row, 8)
+            desc_item       = self.itemsTable.item(row, 9)
 
             # Skip row if essential fields are missing
             if not all([name_item, address_item, length_item, signed_item, min_item, max_item]):
@@ -167,7 +172,7 @@ class TABSearch(QWidget):
                 "Name"          : name_item.text(),
                 "Unit"          : unit_item.text() if unit_item else "",
                 "Equation"      : equation_item.text() if equation_item else "",
-                "Format"        : "%01.0f",
+                "Format"        : format_item.text() if format_item else "%01.0f",
                 "Address"       : address_item.text(),
                 "Length"        : length_item.text(),
                 "Signed"        : signed_item.text(),
@@ -182,6 +187,8 @@ class TABSearch(QWidget):
                 "Description"   : desc_item.text() if desc_item else ""
             }
             self.parent.addListItem(item, overwrite)
+
+        self.parent.checkForDuplicates()
 
         self.parent.addLogEntry(f"Added {len(selected_rows)} items to list")
 

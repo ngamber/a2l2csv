@@ -1,8 +1,9 @@
 import time
 import lib.Constants as Constants
 from lib.SearchThread import SearchThread
-from lib.SearchThread import SearchPosition
-from lib.SearchThread import SearchType
+from lib.Constants import SearchPosition
+from lib.Constants import SearchType
+from lib.Constants import DBType
 
 
 class ReplaceThread():
@@ -19,35 +20,41 @@ class ReplaceThread():
         self.searchThread.finished.connect(self._searchFinished)
         self.searchThread.search_position = SearchPosition.EQ
 
-        self.isRunning          = False
-        self.searchStartTime    = 0
-        self.replaceItemCount   = 0
-        self.searchItemCount    = 0
+        self.isRunning              = False
+        self.searchStartTime        = 0
+        self.replaceItemCount       = 0
+        self.searchItemCount        = 0
 
-        self.tableItem          = None
-        self.tableRow           = 0
-        self.searchItem         = None
-        self.searchFound        = False
-        self.newSession         = None
-        self.originalSession    = None
+        self.tableItem              = None
+        self.tableRow               = 0
+        self.searchItem             = None
+        self.searchFound            = False
+
+        self.newDBType              = DBType.NONE
+        self.newA2LSession          = None
+        self.newCSVNameDB           = {}
+        self.newCSVAddressDB        = {}
+
+        self.originalDBType         = DBType.NONE
+        self.originalA2LSession     = None
+        self.originalCSVNameDB      = {}
+        self.originalCSVAddressDB   = {}
 
 
-    def run(self, newSession, originalSession):
+    def run(self):
         if self.isRunning == True:
-            self.parent.addLogEntry(f"Overwrite in progress, unable to start overwrite task")
+            self.logMessage(f"Overwrite in progress, unable to start overwrite task")
             return
 
-        self.isRunning          = True
-        self.searchStartTime    = time.time()
-        self.replaceItemCount   = 0
-        self.searchItemCount    = 0
+        self.isRunning              = True
+        self.searchStartTime        = time.time()
+        self.replaceItemCount       = 0
+        self.searchItemCount        = 0
 
-        self.tableItem          = None
-        self.tableRow           = -1
-        self.searchItem         = None
-        self.searchFound        = False
-        self.newSession         = newSession
-        self.originalSession    = originalSession
+        self.tableItem              = None
+        self.tableRow               = -1
+        self.searchItem             = None
+        self.searchFound            = False
 
         self._startNextSearch()
 
@@ -73,7 +80,10 @@ class ReplaceThread():
             return
 
         #start search in original database search for address in pid list
-        self.searchThread.a2lsession        = self.originalSession
+        self.searchThread.db_type           = self.originalDBType
+        self.searchThread.a2lsession        = self.originalA2LSession
+        self.searchThread.csv_name_db       = self.originalCSVNameDB
+        self.searchThread.csv_address_db    = self.originalCSVAddressDB
         self.searchThread.search_string     = self.tableItem["Address"]
         self.searchThread.search_type       = SearchType.ADDR
         self.searchThread.items_left        = 0
@@ -114,7 +124,10 @@ class ReplaceThread():
 
             else:
                 #start search in new database search matching the name found in the previous database
-                self.searchThread.a2lsession        = self.newSession
+                self.searchThread.db_type           = self.newDBType
+                self.searchThread.a2lsession        = self.newA2LSession
+                self.searchThread.csv_name_db       = self.newCSVNameDB
+                self.searchThread.csv_address_db    = self.newCSVAddressDB
                 self.searchThread.search_string     = self.searchItem["Name"]
                 self.searchThread.search_type       = SearchType.NAME
                 self.searchThread.items_left        = 0
