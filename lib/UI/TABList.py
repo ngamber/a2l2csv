@@ -153,7 +153,7 @@ class TABList(QWidget):
             return
 
         try:
-            with open(csvFilename[0], "w", newline='') as csvfile:
+            with open(csvFilename[0], "w", encoding="latin-1", newline='') as csvfile:
                 csvwriter = csv.DictWriter(csvfile, fieldnames=Constants.LIST_DATA_COLUMNS)
 
                 data = []
