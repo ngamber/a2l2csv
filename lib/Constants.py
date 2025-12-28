@@ -1,3 +1,4 @@
+from enum import Enum
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QTableWidgetItem
 
@@ -5,7 +6,7 @@ from PyQt6.QtWidgets import QTableWidgetItem
 #list of constants for application
 
 APPLICATION_VERSION_MAJOR       = 0
-APPLICATION_VERSION_MINOR       = 3
+APPLICATION_VERSION_MINOR       = 4
 APPLICATION_VERSION_STRING      = f"A2L2CSV v{APPLICATION_VERSION_MAJOR}.{APPLICATION_VERSION_MINOR}"
 SEARCH_DATA_COLUMNS             = ["Name", "Unit", "Equation", "Format", "Address", "Length", "Signed", "Min", "Max", "Description"]
 SEARCH_COLUMN_SIZES             = [175, 50, 200, 50, 85, 45, 50, 50, 50, 750]
@@ -21,6 +22,7 @@ APPLY_SQL_OPTIMIZATIONS         = False
 CHECK_FOR_DUPLICATES            = True
 FORMAT_PRECISION_LIMIT          = 3
 
+
 DATA_LENGTH = {
     "UWORD": "2",
     "UBYTE": "1",
@@ -31,6 +33,7 @@ DATA_LENGTH = {
     "FLOAT32_IEEE": "4",
 }
 
+
 DATA_SIGNED = {
     "UWORD": "FALSE",
     "UBYTE": "FALSE",
@@ -40,3 +43,22 @@ DATA_SIGNED = {
     "SLONG": "TRUE",
     "FLOAT32_IEEE": "FALSE",
 }
+
+
+class SearchPosition(Enum):
+    START   = 1
+    CONTAIN = 2
+    END     = 3
+    EQ      = 4
+
+
+class SearchType(Enum):
+    NAME    = 1
+    DESC    = 2
+    ADDR    = 3
+
+
+class DBType(Enum):
+    NONE    = 1
+    A2L     = 2
+    CSV     = 3

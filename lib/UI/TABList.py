@@ -128,7 +128,7 @@ class TABList(QWidget):
 
     def _loadCSV(self, overwrite, csvFilename):
         try:
-            with open(csvFilename[0], "r", newline='') as csvfile:
+            with open(csvFilename[0], "r", encoding="latin-1", newline='') as csvfile:
                 csvreader = csv.DictReader(csvfile)
 
                 for column_str in Constants.LIST_DATA_COLUMNS_REQUIRED:

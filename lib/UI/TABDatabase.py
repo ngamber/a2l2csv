@@ -1,15 +1,15 @@
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QFileDialog, QLineEdit, QLabel, QCheckBox
-from lib.LoadA2LThread import LoadA2LThread
+from lib.LoadThread import LoadThread
 from lib.ReplaceThread import ReplaceThread
+from lib.Constants import DBType
 
-
-class TABA2L(QWidget):
+class TABDatabase(QWidget):
     def __init__(self, parent: QWidget):
         super().__init__(parent)
         self.parent     = parent
 
         #Load
-        self.loadThread = LoadA2LThread()
+        self.loadThread = LoadThread()
         self.loadThread.logMessage.connect(self.parent.addLogEntry)
         self.loadThread.finished.connect(self.onFinishedLoading)
 
@@ -53,8 +53,8 @@ class TABA2L(QWidget):
 
 
     def FindButtonClick(self):
-        a2lFileName = QFileDialog.getOpenFileName(self, "Open A2L", "", "A2L (*.a2l *.a2ldb)",)
-        self.fileEditBox.setText(a2lFileName[0])
+        dbFileName = QFileDialog.getOpenFileName(self, "Open Database", "", "Database (*.a2l *.a2ldb *.csv)",)
+        self.fileEditBox.setText(dbFileName[0])
 
 
     def LoadButtonClick(self):
@@ -69,27 +69,41 @@ class TABA2L(QWidget):
     def onFinishedLoading(self):
         #overwrite list pid addresses
         if self.overwriteCheckBox.isChecked():
-            self.replaceThread.run(self.loadThread.a2lsession, self.parent.a2lsession)
+            self.replaceThread.newDBType              = self.loadThread.db_type
+            self.replaceThread.newA2LSession          = self.loadThread.a2lsession
+            self.replaceThread.newCSVNameDB           = self.loadThread.csv_name_db
+            self.replaceThread.newCSVAddressDB        = self.loadThread.csv_address_db
+
+            self.replaceThread.originalDBType         = self.parent.db_type
+            self.replaceThread.originalA2LSession     = self.parent.a2lsession
+            self.replaceThread.originalCSVNameDB      = self.parent.csv_name_db
+            self.replaceThread.originalCSVAddressDB   = self.parent.csv_address_db
+
+            self.replaceThread.run()
 
         else:
-            self._loadA2LSession()
+            self._loadDatabase()
 
 
     def _checkOverwrite(self):
-        self.overwriteCheckBox.setEnabled(True if self.parent.a2lsession is not None else False)
+        self.overwriteCheckBox.setEnabled(True if self.parent.db_type != DBType.NONE else False)
 
 
-    def _loadA2LSession(self):
-        #set current a2l database
-        self.parent.a2ldb       = self.loadThread.a2ldb
-        self.parent.a2lsession  = self.loadThread.a2lsession
+    def _loadDatabase(self):
+        self.parent.a2ldb           = self.loadThread.a2ldb
+        self.parent.a2lsession      = self.loadThread.a2lsession
+        self.parent.csv_name_db     = self.loadThread.csv_name_db
+        self.parent.csv_desc_db     = self.loadThread.csv_desc_db
+        self.parent.csv_address_db  = self.loadThread.csv_address_db
+
+        self.parent.db_type = self.loadThread.db_type
 
         #update layout
         self.loadPushButton.setEnabled(True)
         self._checkOverwrite()
 
         # Switch to Search tab if file loaded successfully
-        if self.parent.a2lsession is not None:
+        if self.parent.db_type != DBType.NONE:
             self.parent.tabs.setTabEnabled(1, True)
             self.parent.tabs.setTabEnabled(2, True)
             self.parent.tabs.setCurrentIndex(1)
@@ -100,4 +114,4 @@ class TABA2L(QWidget):
 
 
     def _replaceFinished(self):
-        self._loadA2LSession()
+        self._loadDatabase()

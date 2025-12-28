@@ -2,8 +2,8 @@ import lib.Helpers as Helpers
 import lib.Constants as Constants
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QRadioButton, QLineEdit, QLabel, QTableWidget, QTableWidgetItem, QAbstractItemView, QButtonGroup, QCheckBox, QGridLayout
 from lib.SearchThread import SearchThread
-from lib.SearchThread import SearchPosition
-from lib.SearchThread import SearchType
+from lib.Constants import SearchPosition
+from lib.Constants import SearchType
 
 
 class TABSearch(QWidget):
@@ -134,9 +134,13 @@ class TABSearch(QWidget):
             else:
                 self.searchThread.search_type   = SearchType.ADDR
 
-            self.searchThread.items_left    = Constants.MAX_SEARCH_ITEMS
-            self.searchThread.search_string = self.inputEditBox.text()
-            self.searchThread.a2lsession    = self.parent.a2lsession
+            self.searchThread.db_type           = self.parent.db_type
+            self.searchThread.a2lsession        = self.parent.a2lsession
+            self.searchThread.csv_name_db       = self.parent.csv_name_db
+            self.searchThread.csv_desc_db       = self.parent.csv_desc_db
+            self.searchThread.csv_address_db    = self.parent.csv_address_db
+            self.searchThread.items_left        = Constants.MAX_SEARCH_ITEMS
+            self.searchThread.search_string     = self.inputEditBox.text()
             self.searchThread.start()
 
 
